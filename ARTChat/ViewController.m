@@ -31,6 +31,15 @@
     // Dispose of any resources that can be recreated.
 }
 
+- (IBAction)connect:(UIButton *)sender
+{
+    sender.enabled = NO;
+
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+//        [self connectToServer:self.serverAddressField.text];
+    });
+}
+
 #pragma mark - Socket communications
 
 - (void)connectToServer:(NSString *)serverAddress
