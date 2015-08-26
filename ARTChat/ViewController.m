@@ -36,7 +36,7 @@
     sender.enabled = NO;
 
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-//        [self connectToServer:self.serverAddressField.text];
+        [self connectToServer:self.serverAddressField.text];
     });
 }
 
@@ -64,7 +64,7 @@
     self.socketSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, self.socketFD, 0, queue);
 
     dispatch_source_set_event_handler(self.socketSource, ^{
-        [self readFromSocket];
+        [self readFromSocket:self.socketSource socket:self.socketFD];
     });
 
     dispatch_source_set_cancel_handler(self.socketSource, ^{
@@ -77,9 +77,36 @@
 
 }
 
-#error readFromSocket needs some implementation
-- (void)readFromSocket{
+//#error readFromSocket needs some implementation
+- (void)readFromSocket:(dispatch_source_t)readSource socket:(int)socket{
+    //size_t estimated = dispatch_source_get_data(readSource) + 1;
+    //char* buffer = (char*)malloc(estimated);
+    unsigned int length = 0;
+    char* buffer = 0;
+    ReadXBytes(socket, sizeof(length), (void*)(&length));
+     buffer =  (char*)malloc(length);
+    ReadXBytes(socket, length, (void*)buffer);
+     NSLog(@"%s", buffer);
+    free(buffer);
+
+}
+void ReadXBytes(int socket, unsigned int x, void* buffer)
+{
+    int bytesRead = 0;
     
+    int result;
+    while (bytesRead < x)
+    {
+        //result =(int)read(socket, buffer + bytesRead, x - bytesRead);
+    result =(int)read(socket, buffer + bytesRead, x - bytesRead);
+       
+        if (result < 1 )
+        {
+            // Throw your error.
+        }
+        
+        bytesRead += result;
+    }
 }
 
 #pragma mark - Table data source
