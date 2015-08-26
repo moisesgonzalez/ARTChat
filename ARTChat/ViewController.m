@@ -16,13 +16,15 @@
 
 @property (assign, nonatomic) int                socketFD;
 @property (strong, nonatomic) dispatch_source_t socketSource;
+@property NSMutableArray *mensajes;
 
 @end
 
 @implementation ViewController
-
+@synthesize mensajes;
 - (void)viewDidLoad {
     [super viewDidLoad];
+    mensajes=[NSMutableArray new];
 
 }
 
@@ -79,47 +81,45 @@
 
 //#error readFromSocket needs some implementation
 - (void)readFromSocket:(dispatch_source_t)readSource socket:(int)socket{
-    //size_t estimated = dispatch_source_get_data(readSource) + 1;
-    //char* buffer = (char*)malloc(estimated);
     unsigned int length = 0;
+    int numbytes;
     char* buffer = 0;
-    ReadXBytes(socket, sizeof(length), (void*)(&length));
-     buffer =  (char*)malloc(length);
-    ReadXBytes(socket, length, (void*)buffer);
-     NSLog(@"%s", buffer);
-    free(buffer);
-
-}
-void ReadXBytes(int socket, unsigned int x, void* buffer)
-{
-    int bytesRead = 0;
+    buffer =  (char*)malloc(length);
     
-    int result;
-    while (bytesRead < x)
-    {
-        //result =(int)read(socket, buffer + bytesRead, x - bytesRead);
-    result =(int)read(socket, buffer + bytesRead, x - bytesRead);
-       
-        if (result < 1 )
-        {
-            // Throw your error.
-        }
+    if ((numbytes=(int)recv(socket,buffer,1024,0)) == -1){
         
-        bytesRead += result;
+        NSLog(@"Error en recv() \n");
+           }
+    else
+    {
+         buffer[numbytes]='\0';
+        NSString *mensaje=[NSString stringWithFormat:@"%s",buffer];
+        if(numbytes>1)
+        {
+            NSLog(@"%@",mensaje);
+            [mensajes addObject:mensaje];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.tableView reloadData];
+            });
+        }
+        //NSLog(@"%s",buffer);
     }
+
+       free(buffer);
+
 }
 
 #pragma mark - Table data source
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    return 1;
+    return mensajes.count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"UITableViewCell"
-                                                            forIndexPath:indexPath];
+    UITableViewCell *cell=[UITableViewCell new];
+    cell.textLabel.text=[mensajes objectAtIndex:indexPath.row];
 
     return cell;
 }
